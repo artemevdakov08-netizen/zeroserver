@@ -129,7 +129,16 @@ def promo():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
-    
+
+# удаление аккаунта
+
+@app.route("/delete/<username>", methods=["POST"])
+def delete_account(username):
+    if username in players:
+        del players[username]
+        return jsonify({"status": "ok", "message": f"Аккаунт {username} удалён"})
+    else:
+        return jsonify({"status": "error", "message": "Игрок не найден"}), 404
 
 
 
