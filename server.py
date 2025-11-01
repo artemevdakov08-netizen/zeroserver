@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 
-app = Flask(_name_)
+app = Flask(__name__)
 
 # Простая база данных в памяти (потом можно заменить на файл или PostgreSQL)
 players = {}
@@ -55,4 +55,5 @@ def promo():
 
 if _name_ == "_main_":
     app.run(host="0.0.0.0", port=10000)
+
 
