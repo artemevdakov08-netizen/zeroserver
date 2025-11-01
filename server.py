@@ -1,9 +1,29 @@
 from flask import Flask, request, jsonify
+import os, json
 
-app = Flask(__name__)
+app = Flask(_name_)
 
-# Простая база данных в памяти (потом можно заменить на файл или PostgreSQL)
-players = {}
+# Файл для хранения игроков
+DB_FILE = "players.json"
+
+# Загружаем игроков при старте
+if os.path.exists(DB_FILE):
+    with open(DB_FILE, "r") as f:
+        players = json.load(f)
+else:
+    players = {}
+
+# Загружаем промокоды из файла
+PROMO_FILE = "promo_codes.json"
+if os.path.exists(PROMO_FILE):
+    with open(PROMO_FILE, "r") as f:
+        promo_codes = json.load(f)
+else:
+    promo_codes = {}  # пока пусто, потом заполни JSON с 50 кодами
+
+def save_db():
+    with open(DB_FILE, "w") as f:
+        json.dump(players, f)
 
 @app.route("/")
 def home():
@@ -14,9 +34,16 @@ def home():
 def register():
     data = request.json
     username = data.get("username")
+    password = data.get("password")
+
+    if not username or not password:
+        return jsonify({"status": "error", "message": "Введите ник и пароль!"}), 400
+
     if username in players:
         return jsonify({"status": "error", "message": "Имя уже занято!"}), 400
-    players[username] = {"money": 1000, "used_codes": []}
+
+    players[username] = {"password": password, "money": 1000, "used_codes": []}
+    save_db()
     return jsonify({"status": "ok", "message": "Аккаунт создан", "player": players[username]})
 
 # 💰 Получить данные игрока
@@ -32,11 +59,6 @@ def promo():
     data = request.json
     username = data.get("username")
     code = data.get("code")
-    promo_codes = {
-        "START100": 100,
-        "PULSAR": 500,
-        "FRIDAY": 10000
-    }
 
     if username not in players:
         return jsonify({"status": "error", "message": "Игрок не найден!"}), 404
@@ -48,17 +70,16 @@ def promo():
         reward = promo_codes[code]
         players[username]["money"] += reward
         players[username]["used_codes"].append(code)
+        save_db()
         return jsonify({"status": "ok", "message": f"Начислено {reward} монет!"})
     else:
         return jsonify({"status": "error", "message": "Неверный код!"}), 400
 
-
-if __name__ == "__main__":
-    import os
+if _name_ == "_main_":
     port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port
-debug=True)
+    app.run(host="0.0.0.0", port=port)
     
+
 
 
 
