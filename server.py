@@ -132,13 +132,21 @@ if __name__ == "__main__":
 
 # удаление аккаунта
 
-@app.route("/delete/<username>", methods=["POST"])
-def delete_account(username):
-    if username in players:
-        del players[username]
-        return jsonify({"status": "ok", "message": f"Аккаунт {username} удалён"})
-    else:
+@app.route("/delete", methods=["POST"])
+def delete_account():
+    data = request.json
+    username = data.get("username")
+    password = data.get("password")
+
+    if username not in players:
         return jsonify({"status": "error", "message": "Игрок не найден"}), 404
+
+    # Проверка пароля
+    if players[username].get("password") != password:
+        return jsonify({"status": "error", "message": "Неверный пароль"}), 400
+
+    del players[username]
+    return jsonify({"status": "ok", "message": f"Аккаунт {username} удалён"})
 
 
 
