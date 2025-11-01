@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import os, json
 
-app = Flask(_name_)
+app = Flask(__name__)
 
 # Файл для хранения игроков
 DB_FILE = "players.json"
@@ -103,9 +103,10 @@ def delete_account():
     save_db()
     return jsonify({"status": "ok", "message": f"Аккаунт {username} удалён"})
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
