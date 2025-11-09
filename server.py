@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import os, json
 
-app = Flask(__name__)
+app = Flask(__name+_)
 
 DB_FILE = "players.json"
 
@@ -14,29 +14,30 @@ else:
 
 def save_db():
     with open(DB_FILE, "w") as f:
-        json.dump(players, f)
+        json.dump(players, f, ensure_ascii=False, indent=2)
 
 @app.route("/")
 def home():
     return "✅ ZERO Breaker Server работает!"
 
-# ---------------- Регистрация аккаунта ----------------
-@app.route("/register", methods=["POST"])
-def register():
+# ---------------- Игрок заходит с ником ----------------
+@app.route("/join", methods=["POST"])
+def join():
     data = request.json
     username = data.get("username")
-    password = data.get("password")
 
-    if not username or not password:
-        return jsonify({"status": "error", "message": "Введите ник и пароль!"}), 400
+    if not username or username.strip() == "":
+        return jsonify({"status": "error", "message": "Введите ник!"}), 400
+
+    username = username.strip()
 
     if username in players:
-        return jsonify({"status": "error", "message": "Имя уже занято!"}), 400
+        return jsonify({"status": "error", "message": "Ник занят!"}), 400
 
-    # Создаём аккаунт
-    players[username] = {"username": username, "password": password, "money": 1000, "used_codes": []}
+    # Создаём нового игрока с деньгами и уровнем
+    players[username] = {"username": username, "money": 1000, "level": 1, "used_codes": []}
     save_db()
-    return jsonify({"status": "ok", "message": "Аккаунт создан", "player": players[username]})
+    return jsonify({"status": "ok", "message": "Добро пожаловать!", "player": players[username]})
 
 # ---------------- Получить данные игрока ----------------
 @app.route("/player/<username>", methods=["GET"])
@@ -45,24 +46,7 @@ def get_player(username):
         return jsonify({"status": "error", "message": "Игрок не найден!"}), 404
     return jsonify({"status": "ok", "player": players[username]})
 
-# ---------------- Удаление аккаунта ----------------
-@app.route("/delete", methods=["POST"])
-def delete_account():
-    data = request.json
-    username = data.get("username")
-    password = data.get("password")
-
-    if username not in players:
-        return jsonify({"status": "error", "message": "Игрок не найден"}), 404
-
-    if players[username]["password"] != password:
-        return jsonify({"status": "error", "message": "Неверный пароль"}), 400
-
-    del players[username]
-    save_db()
-    return jsonify({"status": "ok", "message": f"Аккаунт {username} удалён"})
-
-# ---------------- Активировать промокод ----------------
+# ---------------- Промокоды ----------------
 PROMO_FILE = "promo_codes.json"
 if os.path.exists(PROMO_FILE):
     with open(PROMO_FILE, "r") as f:
@@ -105,6 +89,7 @@ def promo():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
