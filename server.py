@@ -34,7 +34,7 @@ def join():
     if username in players:
         return jsonify({"status": "error", "message": "Ник занят!"}), 400
 
-    # Создаём нового игрока с деньгами и уровнем
+    # Создаём нового игрока
     players[username] = {"username": username, "money": 1000, "level": 1, "used_codes": []}
     save_db()
     return jsonify({"status": "ok", "message": "Добро пожаловать!", "player": players[username]})
@@ -86,10 +86,35 @@ def promo():
     else:
         return jsonify({"status": "error", "message": "Неверный код!"}), 400
 
+# ---------------- Получение денег ----------------
+@app.route("/get_money", methods=["GET"])
+def get_money():
+    username = request.args.get("username")
+    if not username or username not in players:
+        return jsonify({"status": "error", "message": "Игрок не найден!"}), 404
+    return jsonify({"status": "ok", "money": players[username]["money"]})
+
+# ---------------- Обновление денег ----------------
+@app.route("/update_money", methods=["POST"])
+def update_money():
+    data = request.json
+    username = data.get("username")
+    money = data.get("money")
+
+    if not username or username not in players:
+        return jsonify({"status": "error", "message": "Игрок не найден!"}), 404
+
+    if money is None or not isinstance(money, (int, float)):
+        return jsonify({"status": "error", "message": "Некорректное значение денег!"}), 400
+
+    players[username]["money"] = int(money)
+    save_db()
+    return jsonify({"status": "ok", "message": "Баланс обновлён!", "money": int(money)})
+
+# ---------------- Запуск ----------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
-
 
 
 
